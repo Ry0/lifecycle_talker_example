@@ -22,24 +22,21 @@ def main(args=None):
     
     subscriber = LifecycleSubscriber()
     
-    # ロガーをセットアップ
     subscriber.get_logger().info('LifecycleSubscriber node initialized.')
-    
+
+    executor = rclpy.executors.SingleThreadedExecutor()
+    # executor = rclpy.executors.MultiThreadedExecutor()
+    executor.add_node(subscriber)
+
     try:
-        # rclpy.spin()の代わりにSingleThreadedExecutorを使用
-        executor = rclpy.executors.SingleThreadedExecutor()
-        # executor = rclpy.executors.MultiThreadedExecutor()
-        executor.add_node(subscriber)
         executor.spin()
     except KeyboardInterrupt:
         pass
     finally:
-        # クリーンアップ
         subscriber.destroy_node()
-        try:
+        if rclpy.ok():
             rclpy.shutdown()
-        except Exception as e:
-            pass
+  
 
 if __name__ == '__main__':
     main()

@@ -7,14 +7,9 @@
   <maintainer email="kabutan.github@gmail.com">Ryo Kabutan</maintainer>
   <license>MIT</license>
 
-  <buildtool_depend>ament_python</buildtool_depend>
-
-  <depend>rclpy</depend>
-  <depend>lifecycle_msgs</depend>
-  <depend>std_msgs</depend>
-  <depend>std_msgs</depend>
-  <depend>launch_ros</depend>
-  <depend>launch</depend>
+  <exec_depend>lifecycle_msgs</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
