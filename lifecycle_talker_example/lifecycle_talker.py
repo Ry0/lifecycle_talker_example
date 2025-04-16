@@ -8,6 +8,8 @@ from rcl_interfaces.msg import SetParametersResult
 from lifecycle_msgs.msg import State as msgState
 
 import time
+# import threading
+
 
 class MyLifecycleNode(LifecycleNode):
     def __init__(self):
@@ -93,7 +95,9 @@ class MyLifecycleNode(LifecycleNode):
                 self.timer = None
                 
             # パブリッシャーを非アクティブ化
-            self.publisher.on_deactivate(state)
+            if self.publisher:
+                self.publisher.on_deactivate(state)
+                self.publisher = None
             self.get_logger().info('Publisher deactivated')
             
             return TransitionCallbackReturn.SUCCESS
@@ -124,11 +128,24 @@ class MyLifecycleNode(LifecycleNode):
     def on_shutdown(self, state: State) -> TransitionCallbackReturn:
         try:
             self.get_logger().info('on_shutdown() called')
+            # on_deactivate(state)
+            # on_cleanup(state)
+            self._shutdown()
+            # shutdown_thread = threading.Thread(target=self._shutdown)
+            # shutdown_thread.daemon = True 
+            # shutdown_thread.start()
+
             # シャットダウン処理
             return TransitionCallbackReturn.SUCCESS
         except Exception as ex:
             self.get_logger().info(f'Publisher shutdown error: {ex}')
             return TransitionCallbackReturn.ERROR
+
+    def _shutdown(self):
+        self.get_logger().info('Call executor.shutdown')
+
+        if self.executor:
+            self.executor.shutdown()
 
     def timer_callback(self):
         msg = String()
@@ -137,31 +154,26 @@ class MyLifecycleNode(LifecycleNode):
         self.publisher.publish(msg)
         self.get_logger().info(f'Publishing: "{msg.data}"')
 
+
 def main(args=None):
     rclpy.init(args=args)
     
     lifecycle_node = MyLifecycleNode()
     
-    # ロガーをセットアップ
     lifecycle_node.get_logger().info('Lifecycle node initialized. Waiting for lifecycle state transitions...')
     
+    executor = rclpy.executors.SingleThreadedExecutor()
+    # executor = rclpy.executors.MultiThreadedExecutor()
+    executor.add_node(lifecycle_node)
+    
     try:
-        # rclpy.spin()の代わりにSingleThreadedExecutorを使用
-        executor = rclpy.executors.SingleThreadedExecutor()
-        # executor = rclpy.executors.MultiThreadedExecutor()
-        executor.add_node(lifecycle_node)
         executor.spin()
     except KeyboardInterrupt:
         pass
     finally:
-        try:
-            lifecycle_node.destroy_node()
-        except Exception as e:
-            pass
-        try:
+        lifecycle_node.destroy_node()
+        if rclpy.ok():
             rclpy.shutdown()
-        except Exception as e:
-            pass
 
 if __name__ == '__main__':
     main()
