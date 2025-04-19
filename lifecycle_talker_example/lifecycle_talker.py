@@ -8,7 +8,7 @@ from rcl_interfaces.msg import SetParametersResult
 from lifecycle_msgs.msg import State as msgState
 
 import time
-# import threading
+import threading
 
 
 class MyLifecycleNode(LifecycleNode):
@@ -130,10 +130,10 @@ class MyLifecycleNode(LifecycleNode):
             self.get_logger().info('on_shutdown() called')
             # on_deactivate(state)
             # on_cleanup(state)
-            self._shutdown()
-            # shutdown_thread = threading.Thread(target=self._shutdown)
-            # shutdown_thread.daemon = True 
-            # shutdown_thread.start()
+
+            shutdown_thread = threading.Thread(target=self._shutdown)
+            shutdown_thread.daemon = True 
+            shutdown_thread.start()
 
             # シャットダウン処理
             return TransitionCallbackReturn.SUCCESS
@@ -141,8 +141,14 @@ class MyLifecycleNode(LifecycleNode):
             self.get_logger().info(f'Publisher shutdown error: {ex}')
             return TransitionCallbackReturn.ERROR
 
-    def _shutdown(self):
+    def _shutdown(self, wait=True):
         self.get_logger().info('Call executor.shutdown')
+        if wait:
+            while True:
+                state_id, _ = self.get_current_state()
+                if state_id == msgState.PRIMARY_STATE_FINALIZED:
+                    break
+                time.sleep(0.1)
 
         if self.executor:
             self.executor.shutdown()
