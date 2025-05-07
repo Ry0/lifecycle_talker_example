@@ -152,7 +152,16 @@ class MyLifecycleNode(LifecycleNode):
                 time.sleep(0.1)
 
         if self.executor:
-            self.executor.shutdown()
+            self.get_logger().info('executor is exist.')
+            self.executor.remove_node(self)
+            self.destroy_node()
+
+            if len(self.executor.get_nodes()) == 0:
+                self.get_logger().info('executor has zero node. executor.shutdown() execute.')
+                self.executor.shutdown()
+        else:
+            self.get_logger().info('executor is not exist.')
+
 
     def timer_callback(self):
         msg = String()
