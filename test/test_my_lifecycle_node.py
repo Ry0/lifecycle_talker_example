@@ -1,5 +1,6 @@
 import pytest
 import rclpy
+import time
 from lifecycle_msgs.msg import State, Transition
 from std_msgs.msg import String
 from rcl_interfaces.msg import ParameterType
@@ -146,9 +147,17 @@ def test_shutdown_unconfigured_shutdown(lifecycle_node_setup):
     success = lifecycle_node_setup.change_state(Transition.TRANSITION_UNCONFIGURED_SHUTDOWN)
     assert success is True
 
-    # 状態がFinalizedか確認
-    state = lifecycle_node_setup.get_current_state()
-    assert state == State.PRIMARY_STATE_FINALIZED
+    # Shutdown確認
+    while True:
+        if lifecycle_node_setup.test_target_node.is_shutdown:
+            break
+        time.sleep(1.0)
+
+    lifecycle_node_setup.executor.remove_node(lifecycle_node_setup.test_utility_node)
+    lifecycle_node_setup.test_utility_node.destroy_node()
+
+    if len(lifecycle_node_setup.executor.get_nodes()) != 0:
+        pytest.fail('executor has some nodes.')
 
 
 def test_shutdown_inactive_shutdown(lifecycle_node_setup):
@@ -162,9 +171,17 @@ def test_shutdown_inactive_shutdown(lifecycle_node_setup):
     success = lifecycle_node_setup.change_state(Transition.TRANSITION_INACTIVE_SHUTDOWN)
     assert success is True
 
-    # 状態がFinalizedか確認
-    state = lifecycle_node_setup.get_current_state()
-    assert state == State.PRIMARY_STATE_FINALIZED
+    # Shutdown確認
+    while True:
+        if lifecycle_node_setup.test_target_node.is_shutdown:
+            break
+        time.sleep(1.0)
+
+    lifecycle_node_setup.executor.remove_node(lifecycle_node_setup.test_utility_node)
+    lifecycle_node_setup.test_utility_node.destroy_node()
+
+    if len(lifecycle_node_setup.executor.get_nodes()) != 0:
+        pytest.fail('executor has some nodes.')
 
 
 def test_shutdown_active_shutdown(lifecycle_node_setup):
@@ -181,6 +198,14 @@ def test_shutdown_active_shutdown(lifecycle_node_setup):
     success = lifecycle_node_setup.change_state(Transition.TRANSITION_ACTIVE_SHUTDOWN)
     assert success is True
 
-    # 状態がFinalizedか確認
-    state = lifecycle_node_setup.get_current_state()
-    assert state == State.PRIMARY_STATE_FINALIZED
+    # Shutdown確認
+    while True:
+        if lifecycle_node_setup.test_target_node.is_shutdown:
+            break
+        time.sleep(1.0)
+
+    lifecycle_node_setup.executor.remove_node(lifecycle_node_setup.test_utility_node)
+    lifecycle_node_setup.test_utility_node.destroy_node()
+
+    if len(lifecycle_node_setup.executor.get_nodes()) != 0:
+        pytest.fail('executor has some nodes.')

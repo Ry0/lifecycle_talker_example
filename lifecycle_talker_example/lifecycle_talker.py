@@ -33,6 +33,8 @@ class MyLifecycleNode(LifecycleNode):
         # パラメータ変更コールバックを追加
         self.add_on_set_parameters_callback(self.parameters_callback)
 
+        self.is_shutdown = False
+
     def parameters_callback(self, params):
         result = SetParametersResult()
         result.successful = True
@@ -151,17 +153,21 @@ class MyLifecycleNode(LifecycleNode):
                     break
                 time.sleep(0.1)
 
-        if self.executor:
-            self.get_logger().info('executor is exist.')
-            self.executor.remove_node(self)
-            self.destroy_node()
+        if self.executor is not None:
+            try:
+                self.get_logger().info('executor is exist.')
+                self.executor.remove_node(self)
+                self.destroy_node()
 
-            if len(self.executor.get_nodes()) == 0:
-                self.get_logger().info('executor has zero node. executor.shutdown() execute.')
-                self.executor.shutdown()
+                if len(self.executor.get_nodes()) == 0:
+                    self.get_logger().info('executor has zero node. executor.shutdown() execute.')
+                    self.executor.shutdown()
+            except Exception as ex:
+                self.get_logger().error(str(ex))
         else:
             self.get_logger().info('executor is not exist.')
 
+        self.is_shutdown = True
 
     def timer_callback(self):
         msg = String()

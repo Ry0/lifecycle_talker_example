@@ -1,8 +1,6 @@
 import threading
 import time
-
 import pytest
-
 import rclpy
 from lifecycle_msgs.srv import ChangeState, GetState
 from rcl_interfaces.srv import SetParameters
